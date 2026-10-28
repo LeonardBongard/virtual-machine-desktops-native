@@ -16,6 +16,9 @@ A tag `v*` publishes them as a GitHub Release with `SHA256SUMS`; the mod's jars 
 | `qemu/windows-x86_64.zip` | QEMU and its DLLs for Windows | QEMU and MSYS2 | [`qemu/bundle_windows.py`](qemu/bundle_windows.py), job `qemu-windows` |
 | `qemu/linux-x86_64.zip` | QEMU and its libraries for x86 Linux | QEMU and Alpine Linux | [`qemu/bundle_linux.py`](qemu/bundle_linux.py), job `qemu-linux` |
 
+In the mod's own (private) repository this repository is a git submodule; `./fetch-release.sh <tag>` puts a release's files,
+checked against its `SHA256SUMS`, where the mod's build takes them from.
+
 ## The QEMU bundles are third-party
 
 We compile no QEMU. Each bundle script downloads the official packages of a known distribution and zips the files QEMU needs:

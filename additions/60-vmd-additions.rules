@@ -1,0 +1,2 @@
+# VMD Additions: the logged-in user may use the mod's serial port
+SUBSYSTEM=="virtio-ports", ATTR{name}=="org.vmdesktops.0", TAG+="uaccess"

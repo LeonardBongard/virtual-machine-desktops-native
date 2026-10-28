@@ -1,0 +1,117 @@
+# Builds every native file the Virtual Machine Desktops jar carries, from this repository only.
+# A tag (v*) also publishes them as a GitHub Release with SHA256SUMS; the mod's jars carry exactly those files.
+name: build
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  ZIG_VERSION: 0.17.0
+
+jobs:
+  webcam-mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: swiftc --version
+      - run: |
+          mkdir -p webcam/build/macos-aarch64 webcam/build/macos-x86_64
+          swiftc -O -target arm64-apple-macos11 webcam/vmd-webcam-mac.swift -o webcam/build/macos-aarch64/vmd-webcam
+          swiftc -O -target x86_64-apple-macos11 webcam/vmd-webcam-mac.swift -o webcam/build/macos-x86_64/vmd-webcam
+      - uses: actions/upload-artifact@v4
+        with: {name: webcam-macos, path: webcam/build}
+
+  webcam-zig:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zig, checked against ziglang.org's own index
+        run: |
+          f=zig-x86_64-linux-$ZIG_VERSION.tar.xz
+          curl -fsSL https://ziglang.org/download/index.json -o index.json
+          sum=$(python3 -c "import json;print(json.load(open('index.json'))['$ZIG_VERSION']['x86_64-linux']['shasum'])")
+          curl -fsSL https://ziglang.org/download/$ZIG_VERSION/$f -o $f
+          echo "$sum  $f" | sha256sum -c -
+          tar -xJf $f && echo "$PWD/zig-x86_64-linux-$ZIG_VERSION" >> $GITHUB_PATH
+      - run: |
+          B=webcam/build; mkdir -p $B/linux-aarch64 $B/linux-x86_64 $B/windows-x86_64
+          for a in aarch64 x86_64; do
+            zig cc -O2 -s -static -target $a-linux-musl webcam/vmd-webcam-linux.c -o $B/linux-$a/vmd-webcam
+          done
+          zig cc -O2 -s -target x86_64-windows-gnu webcam/vmd-webcam-windows.c -o $B/windows-x86_64/vmd-webcam.exe \
+            -lmfplat -lmf -lmfreadwrite -lmfuuid -lole32
+      - uses: actions/upload-artifact@v4
+        with: {name: webcam-zig, path: webcam/build}
+
+  additions:
+    runs-on: ubuntu-24.04
+    container: fedora:44
+    steps:
+      - run: dnf -y install rpm-build xorriso git
+      - uses: actions/checkout@v4
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE" && additions/build.sh
+      - uses: actions/upload-artifact@v4
+        with: {name: additions, path: additions/build/vmd-additions.iso}
+
+  qemu-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Alpine v3.23 package index
+        run: |
+          for r in main community; do
+            mkdir -p dl/index/$r
+            curl -fsSL https://dl-cdn.alpinelinux.org/alpine/v3.23/$r/x86_64/APKINDEX.tar.gz | tar -xz -C dl/index/$r APKINDEX
+          done
+      - run: python3 -I qemu/bundle_linux.py dl
+      - uses: actions/upload-artifact@v4
+        with: {name: qemu-linux, path: qemu/build/linux-x86_64.zip}
+
+  qemu-windows:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y zstd && mkdir dl && python3 -I qemu/bundle_windows.py dl
+      - uses: actions/upload-artifact@v4
+        with: {name: qemu-windows, path: qemu/build/windows-x86_64.zip}
+
+  qemu-mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install qemu && brew info --json=v2 qemu | python3 -c "import json,sys;print('Homebrew QEMU', json.load(sys.stdin)['formulae'][0]['installed'][0]['version'])"
+      - run: python3 qemu/bundle_mac.py
+      - uses: actions/upload-artifact@v4
+        with: {name: qemu-mac, path: qemu/build/macos-aarch64.zip}
+
+  check:
+    needs: [qemu-linux, qemu-windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'qemu-*', path: qemu/build, merge-multiple: true}
+      - run: python3 -I qemu/check_bundles.py
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [webcam-mac, webcam-zig, additions, qemu-linux, qemu-windows, qemu-mac, check]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {path: out}
+      - name: One folder per file kind, the layout inside the jar
+        run: |
+          mkdir -p dist/webcam dist/qemu dist/additions
+          cp -r out/webcam-macos/* out/webcam-zig/* dist/webcam/
+          cp out/qemu-*/*.zip dist/qemu/
+          cp out/additions/vmd-additions.iso dist/additions/
+          (cd dist && find . -type f | sort | xargs sha256sum > SHA256SUMS && cat SHA256SUMS)
+          (cd dist && zip -qr ../vmd-native-${GITHUB_REF_NAME}.zip .)
+      - env: {GH_TOKEN: '${{ github.token }}'}
+        run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --notes-file dist/SHA256SUMS vmd-native-${GITHUB_REF_NAME}.zip dist/SHA256SUMS

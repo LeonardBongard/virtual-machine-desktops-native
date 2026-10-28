@@ -1,0 +1,13 @@
+[Unit]
+Description=VMD Additions: install the camera driver (once)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=!/var/lib/vmd-additions/setup-done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/vmd-additions/vmd-additions-setup
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

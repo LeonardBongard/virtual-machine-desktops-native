@@ -1,0 +1,61 @@
+# QEMU for x86 Linux PCs
+
+The official, unchanged QEMU as built by Alpine Linux v3.23 (https://pkgs.alpinelinux.org), with the musl C library and the libraries it needs, each under its own licence.
+QEMU's source: https://download.qemu.org/qemu-10.1.5.tar.xz (GNU GPL v2).
+Every package's source: https://gitlab.alpinelinux.org/alpine/aports (its APKBUILD names the upstream source).
+
+- brotli-libs 1.2.1-r0
+- capstone 5.0.9-r0
+- e2fsprogs-libs 1.47.3-r0
+- gdbm 1.26-r0
+- glib 2.86.3-r0
+- gmp 6.3.0-r4
+- gnutls 3.8.13-r0
+- libaio 0.3.113-r2
+- libblkid 2.41.6-r1
+- libbpf 1.6.2-r0
+- libbz2 1.0.8-r6
+- libcap-ng 0.8.5-r0
+- libcom_err 1.47.3-r0
+- libdw 0.194-r0
+- libeconf 0.8.3-r0
+- libelf 0.194-r0
+- libffi 3.5.2-r0
+- libgcc 15.2.0-r2
+- libidn2 2.3.8-r0
+- libintl 0.24.1-r1
+- libjpeg-turbo 3.1.2-r0
+- libmount 2.41.6-r1
+- libnl3 3.11.0-r0
+- libpng 1.6.59-r0
+- libsasl 2.1.28-r9
+- libseccomp 2.6.1-r0
+- libslirp 4.9.1-r0
+- libstdc++ 15.2.0-r2
+- libtasn1 4.21.0-r0
+- libunistring 1.4.1-r0
+- liburing 2.12-r0
+- libuuid 2.41.6-r1
+- lzo 2.10-r5
+- musl 1.2.5-r24
+- musl-fts 1.2.7-r7
+- nettle 3.10.2-r0
+- numactl 2.0.18-r0
+- p11-kit 0.26.2-r0
+- pcre2 10.49-r0
+- pixman 0.46.4-r0
+- qemu 10.1.5-r0
+- qemu-hw-display-virtio-gpu 10.1.5-r0
+- qemu-hw-display-virtio-gpu-pci 10.1.5-r0
+- qemu-hw-display-virtio-vga 10.1.5-r0
+- qemu-img 10.1.5-r0
+- qemu-system-x86_64 10.1.5-r0
+- seabios-bin 1.17.0-r0
+- seavgabios-bin 1.17.0-r0
+- snappy 1.2.2-r0
+- vde2-libs 2.3.3-r5
+- xen-libs 4.20.4-r2
+- xz-libs 5.8.4-r0
+- yajl 2.1.0-r9
+- zlib 1.3.2-r1
+- zstd-libs 1.5.7-r2

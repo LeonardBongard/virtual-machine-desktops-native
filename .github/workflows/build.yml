@@ -111,7 +111,7 @@ jobs:
           cp -r out/webcam-macos/* out/webcam-zig/* dist/webcam/
           cp out/qemu-*/*.zip dist/qemu/
           cp out/additions/vmd-additions.iso dist/additions/
-          (cd dist && find . -type f | sort | xargs sha256sum > SHA256SUMS && cat SHA256SUMS)
+          (cd dist && find . -type f | sort | xargs sha256sum > ../SHA256SUMS && mv ../SHA256SUMS . && cat SHA256SUMS)
           (cd dist && zip -qr ../vmd-native-${GITHUB_REF_NAME}.zip .)
       - env: {GH_TOKEN: '${{ github.token }}'}
         run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --notes-file dist/SHA256SUMS vmd-native-${GITHUB_REF_NAME}.zip dist/SHA256SUMS

@@ -79,11 +79,15 @@ jobs:
         with: {name: qemu-windows, path: qemu/build/windows-x86_64.zip}
 
   qemu-mac:
-    runs-on: macos-14
+    runs-on: macos-15  # macos-14's Homebrew QEMU is built without Apple's virtualization (hvf)
     steps:
       - uses: actions/checkout@v4
       - run: brew install qemu && brew info --json=v2 qemu | python3 -c "import json,sys;print('Homebrew QEMU', json.load(sys.stdin)['formulae'][0]['installed'][0]['version'])"
       - run: python3 qemu/bundle_mac.py
+      - name: The bundled QEMU must have Apple's virtualization (hvf), else every PC would be emulated
+        run: |
+          mkdir t && cd t && unzip -q ../qemu/build/macos-aarch64.zip
+          bin/qemu-system-aarch64 -accel help | tee /dev/stderr | grep -qw hvf
       - uses: actions/upload-artifact@v4
         with: {name: qemu-mac, path: qemu/build/macos-aarch64.zip}
 

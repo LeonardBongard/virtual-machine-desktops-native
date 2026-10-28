@@ -74,6 +74,7 @@ def main():
     need = closure(pkgs, provides)
     (dl / "apk").mkdir(exist_ok=True)
     total = 0
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(OUT.with_suffix(".tmp"), "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         versions, written = {}, set()
         for name in sorted(need):
